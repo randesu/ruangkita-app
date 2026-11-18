@@ -27,17 +27,22 @@ internal fun remotePhotoName(id: String, name: String): String = id + "-" + name
 
 internal data class UploadJob(val id: String, val path: String, val size: Long, val modified: Long,
                               val name: String, val attempts: Int, val finalizing: Boolean,
-                              val destination: String, val state: String = "pending", val error: String = "")
+                              val destination: String, val remoteFolder: String, val state: String = "pending", val error: String = "")
 internal data class UploadRule(val enabled: Boolean = false, val mode: String = "all")
 
 /** Database handles are process-local; all state transitions are transactional and survive process death. */
-internal class UploadStore(private val context: Context) : SQLiteOpenHelper(context, "uploads.db", null, 1) {
+internal class UploadStore(private val context: Context) : SQLiteOpenHelper(context, "uploads.db", null, 2) {
     private val prefs = context.getSharedPreferences("ftp_settings", Context.MODE_PRIVATE)
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL("CREATE TABLE sessions(path TEXT PRIMARY KEY, enabled INTEGER NOT NULL, mode TEXT NOT NULL)")
-        db.execSQL("CREATE TABLE jobs(id TEXT PRIMARY KEY, destination TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, modified INTEGER NOT NULL, name TEXT NOT NULL, state TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, due INTEGER NOT NULL DEFAULT 0, finalizing INTEGER NOT NULL DEFAULT 0, error TEXT NOT NULL DEFAULT '', UNIQUE(destination,path,size,modified))")
+        db.execSQL("CREATE TABLE sessions(path TEXT PRIMARY KEY, enabled INTEGER NOT NULL, mode TEXT NOT NULL, remote_folder TEXT NOT NULL DEFAULT '')")
+        db.execSQL("CREATE TABLE jobs(id TEXT PRIMARY KEY, destination TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, modified INTEGER NOT NULL, name TEXT NOT NULL, state TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, due INTEGER NOT NULL DEFAULT 0, finalizing INTEGER NOT NULL DEFAULT 0, error TEXT NOT NULL DEFAULT '', remote_folder TEXT NOT NULL DEFAULT '', UNIQUE(destination,path,size,modified))")
     }
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = error("Unsupported upload database version")
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE sessions ADD COLUMN remote_folder TEXT NOT NULL DEFAULT ''")
+            db.execSQL("ALTER TABLE jobs ADD COLUMN remote_folder TEXT NOT NULL DEFAULT ''")
+        }
+    }
 
     fun settings(): TransferSettings? {
         val host = prefs.getString("host", null) ?: return null
@@ -99,9 +104,29 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
         if (it.moveToFirst()) UploadRule(it.getInt(0) != 0, it.getString(1)) else UploadRule()
     }
 
+    private fun sessionRemoteFolder(baseFolder: String, sessionName: String, protocol: TransferProtocol): String {
+        if (protocol != TransferProtocol.FTP && protocol != TransferProtocol.FTPS) return baseFolder
+        val base = baseFolder.trim().ifBlank { "/" }
+        val child = sessionName.trim().replace(Regex("[\\\\/:*?\"<>|]"), "_").trim('.')
+        require(child.isNotBlank() && child !in setOf(".", "..")) { "Invalid session folder name" }
+        return if (base == "/") "/$child" else "${base.trimEnd('/')}/$child"
+    }
+
+    @Synchronized fun registerSession(directory: File) {
+        val transferSettings = settings() ?: return
+        val remoteFolder = sessionRemoteFolder(transferSettings.folder, directory.name, transferSettings.protocol)
+        writableDatabase.execSQL(
+            "INSERT INTO sessions(path,enabled,mode,remote_folder) VALUES(?,0,'all',?) " +
+                "ON CONFLICT(path) DO UPDATE SET remote_folder=excluded.remote_folder",
+            arrayOf(directory.absolutePath, remoteFolder)
+        )
+    }
+
     @Synchronized fun configureSession(directory: File, enabled: Boolean, mode: String, includeExisting: Boolean) {
         require(mode in setOf("all", "raw", "jpeg"))
-        if (enabled) require(settings() != null) { "Configure the FTP server first" }
+        val transferSettings = settings()
+        if (enabled) require(transferSettings != null) { "Configure the FTP server first" }
+        val remoteFolder = transferSettings?.let { sessionRemoteFolder(it.folder, directory.name, it.protocol) } ?: ""
         val db = writableDatabase
         db.beginTransaction()
         try {
@@ -113,7 +138,7 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
                     arrayOf(prefs.getString("destination", "")!!, file.absolutePath, file.length(), file.lastModified()))
             }
             db.insertWithOnConflict("sessions", null, ContentValues().apply {
-                put("path", directory.absolutePath); put("enabled", if (enabled) 1 else 0); put("mode", mode)
+                put("path", directory.absolutePath); put("enabled", if (enabled) 1 else 0); put("mode", mode); put("remote_folder", remoteFolder)
             }, SQLiteDatabase.CONFLICT_REPLACE)
             db.setTransactionSuccessful()
         } finally { db.endTransaction() }
@@ -143,23 +168,27 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
         db.insertWithOnConflict("jobs", null, ContentValues().apply {
             put("id", id); put("path", file.absolutePath); put("size", file.length()); put("modified", file.lastModified())
             put("destination", destination)
+            val remoteFolder = readableDatabase.rawQuery("SELECT remote_folder FROM sessions WHERE path=?", arrayOf(file.parentFile?.absolutePath ?: "")).use {
+                if (it.moveToFirst()) it.getString(0) else settings()?.folder.orEmpty()
+            }
+            put("remote_folder", remoteFolder)
             put("name", remotePhotoName(id, file.name)); put("state", state)
         }, SQLiteDatabase.CONFLICT_IGNORE)
     }
 
     fun next(): UploadJob? = readableDatabase.rawQuery(
-        "SELECT id,path,size,modified,name,attempts,finalizing,destination,state,error FROM jobs WHERE destination=? AND state='pending' AND due<=? ORDER BY rowid LIMIT 1",
+        "SELECT id,path,size,modified,name,attempts,finalizing,destination,remote_folder,state,error FROM jobs WHERE destination=? AND state='pending' AND due<=? ORDER BY rowid LIMIT 1",
         arrayOf(prefs.getString("destination", "")!!, System.currentTimeMillis().toString())).use {
         if (!it.moveToFirst()) null else uploadJob(it)
     }
 
     fun jobs(limit: Int = 50): List<UploadJob> = readableDatabase.rawQuery(
-        "SELECT id,path,size,modified,name,attempts,finalizing,destination,state,error FROM jobs ORDER BY rowid DESC LIMIT ?",
+        "SELECT id,path,size,modified,name,attempts,finalizing,destination,remote_folder,state,error FROM jobs ORDER BY rowid DESC LIMIT ?",
         arrayOf(limit.toString())).use { cursor -> buildList { while (cursor.moveToNext()) add(uploadJob(cursor)) } }
 
     private fun uploadJob(cursor: android.database.Cursor) = UploadJob(
         cursor.getString(0), cursor.getString(1), cursor.getLong(2), cursor.getLong(3), cursor.getString(4),
-        cursor.getInt(5), cursor.getInt(6) != 0, cursor.getString(7), cursor.getString(8), cursor.getString(9))
+        cursor.getInt(5), cursor.getInt(6) != 0, cursor.getString(7), cursor.getString(8), cursor.getString(9), cursor.getString(10))
     fun finalizing(job: UploadJob) { writableDatabase.execSQL("UPDATE jobs SET finalizing=1 WHERE id=? AND state='pending'", arrayOf(job.id)) }
     fun done(job: UploadJob) { writableDatabase.execSQL("UPDATE jobs SET state='done',error='' WHERE id=? AND state='pending'", arrayOf(job.id)) }
     fun fail(job: UploadJob, message: String, permanent: Boolean) {
