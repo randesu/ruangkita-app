@@ -20,6 +20,7 @@ class ServerSettingsActivity : AppCompatActivity() {
     private var activeCheck: TransferClient? = null
     private var currentSettings: TransferSettings? = null
     private var closed = false
+    private var sessionName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,10 +31,17 @@ class ServerSettingsActivity : AppCompatActivity() {
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
+        sessionName = intent.getStringExtra(EXTRA_SESSION_NAME)
         binding.toolbar.setNavigationOnClickListener { finish() }
         binding.protocolSpinner.adapter = ArrayAdapter(this,
             android.R.layout.simple_spinner_dropdown_item, TransferProtocol.entries.map { it.title })
         loadSavedSettings()
+        sessionName?.let { name ->
+            binding.folderInput.setText(name)
+            binding.folderInput.isEnabled = false
+            binding.browseFolderButton.visibility = View.GONE
+            updateMessage("Destination Folder mengikuti nama session di dalam FTP Home Directory")
+        }
         var previousProtocol = binding.protocolSpinner.selectedItemPosition
         binding.protocolSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -101,7 +109,7 @@ class ServerSettingsActivity : AppCompatActivity() {
             binding.portInput.text.toString().toIntOrNull() ?: 0,
             binding.userInput.text.toString().trim(),
             binding.passwordInput.text.toString(),
-            binding.folderInput.text.toString().trim(),
+            if (sessionName != null) currentSettings?.folder ?: "/" else binding.folderInput.text.toString().trim(),
             protocol,
             binding.hostFingerprintInput.text.toString().trim(),
             TransferTiming(
@@ -218,6 +226,13 @@ class ServerSettingsActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    companion object {
+        private const val EXTRA_SESSION_NAME = "server_settings_session_name"
+        fun intent(context: android.content.Context, session: java.io.File?) =
+            android.content.Intent(context, ServerSettingsActivity::class.java)
+                .putExtra(EXTRA_SESSION_NAME, session?.name)
     }
 
     private fun parentPath(path: String): String = path.trimEnd('/').substringBeforeLast('/', "").ifBlank { "/" }
