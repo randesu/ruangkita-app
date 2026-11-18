@@ -109,7 +109,7 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
         val base = baseFolder.trim().ifBlank { "/" }
         val child = sessionName.trim().replace(Regex("[\\\\/:*?\"<>|]"), "_").trim('.')
         require(child.isNotBlank() && child !in setOf(".", "..")) { "Invalid session folder name" }
-        return if (base == "/") "/$child" else "${base.trimEnd('/')}/$child"
+        return child
     }
 
     @Synchronized fun registerSession(directory: File) {
