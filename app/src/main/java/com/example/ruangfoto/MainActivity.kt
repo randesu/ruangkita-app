@@ -320,6 +320,7 @@ class MainActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
+                runCatching { UploadStore.get(this).registerSession(newSessionDir) }
                 dialog.dismiss()
                 openSession(newSessionDir)
             }
@@ -456,6 +457,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        runCatching { UploadStore.get(this).registerSession(sessionDir) }
         activeSessionDir = sessionDir
         activeSessionName = sessionDir.name
         activeCameraName = null
