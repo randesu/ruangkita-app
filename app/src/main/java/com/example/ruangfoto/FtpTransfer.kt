@@ -89,7 +89,7 @@ internal class FtpTransfer : TransferClient {
         try { client?.disconnect() } catch (_: IOException) { }
     }
 
-    private fun connect(settings: TransferSettings): FTPClient {
+    private fun connect(settings: TransferSettings, createFolder: Boolean = false): FTPClient {
         require(settings.protocol == TransferProtocol.FTP || settings.protocol == TransferProtocol.FTPS)
         settings.validate()
         checkCancelled()
@@ -112,8 +112,37 @@ internal class FtpTransfer : TransferClient {
         if (ftp is FTPSClient) { ftp.execPBSZ(0); ftp.execPROT("P") }
         ftp.enterLocalPassiveMode()
         if (!ftp.setFileType(FTP.BINARY_FILE_TYPE)) fail(ftp, "Server rejected binary transfer")
-        if (!ftp.changeWorkingDirectory(settings.folder)) throw TransferFailure("Remote folder unavailable; check path and permissions", true, true)
+        if (createFolder) {
+            ensureRemoteDirectory(ftp, settings.folder)
+        } else if (!ftp.changeWorkingDirectory(settings.folder)) {
+            throw TransferFailure("Remote folder unavailable; check path and permissions", true, true)
+        }
         return ftp
+    }
+
+    /**
+     * Create missing path components only for an upload. Relative paths are resolved from
+     * the FTP login directory; absolute paths are resolved from server root.
+     */
+    private fun ensureRemoteDirectory(ftp: FTPClient, folder: String) {
+        val absolute = folder.startsWith("/")
+        if (absolute && !ftp.changeWorkingDirectory("/")) {
+            throw TransferFailure("Cannot access the remote root directory", true, true)
+        }
+        val parts = folder.split('/').filter { it.isNotBlank() && it != "." }
+        for (part in parts) {
+            checkCancelled()
+            if (!ftp.changeWorkingDirectory(part)) {
+                val created = ftp.makeDirectory(part)
+                if (!created && !ftp.changeWorkingDirectory(part)) {
+                    throw TransferFailure("Cannot create or access the session folder (FTP ${ftp.replyCode})",
+                        ftp.replyCode in 500..599, ftp.replyCode in 500..599)
+                }
+                if (created && !ftp.changeWorkingDirectory(part)) {
+                    throw TransferFailure("Cannot enter the newly created session folder", true, true)
+                }
+            }
+        }
     }
 
     override fun listDirectories(settings: TransferSettings, folder: String): List<String> {
@@ -144,7 +173,7 @@ internal class FtpTransfer : TransferClient {
             throw TransferFailure("Local photo changed or disappeared; original upload was not sent", true)
         }
         try {
-            val ftp = connect(settings)
+            val ftp = connect(settings, createFolder = true)
             // The UUID name belongs to this durable job. Only a recorded rename attempt may recover it.
             val existing = ftp.mlistFile(remoteName) ?: ftp.listFiles(remoteName).firstOrNull { it.name == remoteName }
             if (existing != null) {
