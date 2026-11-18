@@ -121,8 +121,8 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
             arrayOf(directory.absolutePath, remoteFolder)
         )
         writableDatabase.execSQL(
-            "UPDATE jobs SET remote_folder=? WHERE path LIKE ? AND remote_folder=''",
-            arrayOf(remoteFolder, directory.absolutePath + "/%")
+            "UPDATE jobs SET remote_folder=? WHERE substr(path,1,length(?)+1)=? || '/' AND remote_folder=''",
+            arrayOf(remoteFolder, directory.absolutePath, directory.absolutePath)
         )
     }
 
