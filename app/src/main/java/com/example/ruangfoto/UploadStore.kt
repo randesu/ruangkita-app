@@ -120,6 +120,10 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
                 "ON CONFLICT(path) DO UPDATE SET remote_folder=excluded.remote_folder",
             arrayOf(directory.absolutePath, remoteFolder)
         )
+        writableDatabase.execSQL(
+            "UPDATE jobs SET remote_folder=? WHERE path LIKE ? AND remote_folder=''",
+            arrayOf(remoteFolder, directory.absolutePath + "/%")
+        )
     }
 
     @Synchronized fun configureSession(directory: File, enabled: Boolean, mode: String, includeExisting: Boolean) {
@@ -169,7 +173,8 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
             put("id", id); put("path", file.absolutePath); put("size", file.length()); put("modified", file.lastModified())
             put("destination", destination)
             val remoteFolder = readableDatabase.rawQuery("SELECT remote_folder FROM sessions WHERE path=?", arrayOf(file.parentFile?.absolutePath ?: "")).use {
-                if (it.moveToFirst()) it.getString(0) else settings()?.folder.orEmpty()
+                if (it.moveToFirst() && it.getString(0).isNotBlank()) it.getString(0)
+                else settings()?.let { current -> sessionRemoteFolder(current.folder, file.parentFile?.name.orEmpty(), current.protocol) }.orEmpty()
             }
             put("remote_folder", remoteFolder)
             put("name", remotePhotoName(id, file.name)); put("state", state)
