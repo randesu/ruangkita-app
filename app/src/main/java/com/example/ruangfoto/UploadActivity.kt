@@ -64,7 +64,7 @@ class UploadActivity : AppCompatActivity() {
         }
         session = intent.getStringExtra(EXTRA_SESSION_PATH)?.let(::File)
         binding.toolbar.setNavigationOnClickListener { finish() }
-        binding.serverSettingsRow.setOnClickListener { startActivity(Intent(this, ServerSettingsActivity::class.java)) }
+        binding.serverSettingsRow.setOnClickListener { startActivity(ServerSettingsActivity.intent(this, session)) }
         rows = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf<String>())
         binding.queueList.adapter = rows
         binding.queueList.emptyView = binding.emptyQueue
