@@ -115,11 +115,14 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
     @Synchronized fun registerSession(directory: File) {
         val transferSettings = settings() ?: return
         val remoteFolder = sessionRemoteFolder(transferSettings.folder, directory.name, transferSettings.protocol)
-        writableDatabase.execSQL(
-            "INSERT INTO sessions(path,enabled,mode,remote_folder) VALUES(?,0,'all',?) " +
-                "ON CONFLICT(path) DO UPDATE SET remote_folder=excluded.remote_folder",
-            arrayOf(directory.absolutePath, remoteFolder)
-        )
+        val db = writableDatabase
+        db.insertWithOnConflict("sessions", null, ContentValues().apply {
+            put("path", directory.absolutePath)
+            put("enabled", 0)
+            put("mode", "all")
+            put("remote_folder", remoteFolder)
+        }, SQLiteDatabase.CONFLICT_IGNORE)
+        db.execSQL("UPDATE sessions SET remote_folder=? WHERE path=?", arrayOf(remoteFolder, directory.absolutePath))
         writableDatabase.execSQL(
             "UPDATE jobs SET remote_folder=? WHERE substr(path,1,length(?)+1)=? || '/' AND remote_folder=''",
             arrayOf(remoteFolder, directory.absolutePath, directory.absolutePath)
