@@ -67,11 +67,12 @@ class UploadService : Service() {
             idleSince = 0L
             val settings = store.settings() ?: throw TransferFailure("Configure a transfer server before uploading", true)
             if (settings.destination() != job.destination) return
-            val current = transferClient(settings)
+            val targetSettings = settings.copy(folder = job.remoteFolder.ifBlank { settings.folder })
+            val current = transferClient(targetSettings)
             transfer = current
             active = current
             try {
-                current.upload(settings, File(job.path), job.size, job.modified, job.name, job.finalizing,
+                current.upload(targetSettings, File(job.path), job.size, job.modified, job.name, job.finalizing,
                     { store.finalizing(job) }, { bytes ->
                         progress = "${File(job.path).name}: ${bytes * 100 / maxOf(1L, job.size)}%"
                         notifyProgress(progress)
