@@ -1,9 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/transfer_background">
-    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" app:title="@string/transfer_server_settings" app:titleTextColor="@color/transfer_text" app:navigationIcon="@drawable/ic_transfer_back" app:navigationContentDescription="@string/transfer_back" />
-    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/transfer_protocol" android:textColor="@color/transfer_muted" />
-            <Spinner android:id="@+id/protocolSpinner" android:layout_width="match_parent" android:layout_height="48dp" android:backgroundTint="@color/transfer_border" />
+    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" style="@style/Widget.RuangFoto.Workspace.Toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" app:title="@string/transfer_server_settings" />
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:paddingHorizontal="@dimen/workspace_gutter" android:paddingVertical="@dimen/workspace_gap">
+        <LinearLayout android:id="@+id/serverWorkspace" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:padding="12dp" android:background="@color/transfer_surface">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/transfer_connection" android:textAppearance="@style/TextAppearance.RuangFoto.Section" android:accessibilityHeading="true" />
+            <Spinner android:id="@+id/protocolSpinner" android:layout_width="match_parent" android:layout_height="48dp" android:backgroundTint="@color/transfer_border" android:contentDescription="@string/transfer_protocol" />
             <TextView android:id="@+id/protocolNote" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="@color/transfer_muted" android:textSize="12sp" />
         <com.google.android.material.textfield.TextInputLayout style="@style/Widget.RuangFoto.Transfer.Input" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:hint="@string/transfer_host" >
             <com.google.android.material.textfield.TextInputEditText android:id="@+id/hostInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textUri" android:singleLine="true" />
@@ -17,6 +18,9 @@
         <com.google.android.material.textfield.TextInputLayout style="@style/Widget.RuangFoto.Transfer.Input" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:hint="@string/transfer_password" app:endIconMode="password_toggle">
             <com.google.android.material.textfield.TextInputEditText android:id="@+id/passwordInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPassword" android:singleLine="true" />
         </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:padding="12dp" android:background="@color/transfer_surface">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/transfer_destination" android:textAppearance="@style/TextAppearance.RuangFoto.Section" android:accessibilityHeading="true" />
         <com.google.android.material.textfield.TextInputLayout android:id="@+id/folderLayout" style="@style/Widget.RuangFoto.Transfer.Input" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:hint="@string/transfer_folder" >
             <com.google.android.material.textfield.TextInputEditText android:id="@+id/folderInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textNoSuggestions" android:singleLine="true" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -44,9 +48,12 @@
             <com.google.android.material.textfield.TextInputEditText android:id="@+id/maxAttemptsInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number" android:singleLine="true" />
         </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
-            <com.google.android.material.button.MaterialButton android:id="@+id/testConnectionButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/transfer_test" />
-            <TextView android:id="@+id/serverStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:accessibilityLiveRegion="polite" android:textColor="@color/transfer_muted" android:textSize="13sp" />
+        </LinearLayout>
         </LinearLayout>
     </ScrollView>
-    <com.google.android.material.button.MaterialButton android:id="@+id/saveServerButton" style="@style/Widget.RuangFoto.Transfer.Button" android:layout_width="match_parent" android:layout_height="56dp" android:layout_margin="20dp" android:text="@string/transfer_save" />
+    <TextView android:id="@+id/serverStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/workspace_gutter" android:layout_marginTop="8dp" android:visibility="gone" android:accessibilityLiveRegion="polite" android:textColor="@color/transfer_text" android:textSize="13sp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingHorizontal="@dimen/workspace_gutter" android:paddingVertical="8dp">
+        <com.google.android.material.button.MaterialButton android:id="@+id/testConnectionButton" style="@style/Widget.RuangFoto.Workspace.Secondary" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="8dp" android:text="@string/transfer_test" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/saveServerButton" style="@style/Widget.RuangFoto.Transfer.Button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/transfer_save" />
+    </LinearLayout>
 </LinearLayout>

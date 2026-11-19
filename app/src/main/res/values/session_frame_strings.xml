@@ -1,0 +1,10 @@
+<resources>
+    <string name="session_tools">Session tools</string>
+    <string name="session_frame_off">Frame off</string>
+    <string name="session_frame_on">Frame on</string>
+    <string name="session_preview_show_latest">Show latest</string>
+    <string name="session_preview_ready">Ready for the next photo</string>
+    <string name="session_preview_off">Auto-preview is off</string>
+    <string name="session_preview_empty">No JPEG in this session yet</string>
+    <string name="session_frame_render_failed">Could not save a framed copy. The original photo is safe.</string>
+</resources>

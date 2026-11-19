@@ -25,9 +25,10 @@ class ServerSettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityServerSettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.serverWorkspace.arrangeWorkspace(scrollTogether = true)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            val safe = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
+            view.setPadding(safe.left, safe.top, safe.right, safe.bottom)
             insets
         }
         binding.toolbar.setNavigationOnClickListener { finish() }
@@ -227,7 +228,10 @@ class ServerSettingsActivity : AppCompatActivity() {
     private fun parentPath(path: String): String = path.trimEnd('/').substringBeforeLast('/', "").ifBlank { "/" }
     private fun joinPath(parent: String, child: String) = if (parent == "/") "/$child" else "${parent.trimEnd('/')}/$child"
 
-    private fun updateMessage(message: String) { binding.serverStatus.text = message }
+    private fun updateMessage(message: String) {
+        binding.serverStatus.visibility = if (message.isBlank()) View.GONE else View.VISIBLE
+        binding.serverStatus.text = message
+    }
 
     override fun onDestroy() {
         closed = true

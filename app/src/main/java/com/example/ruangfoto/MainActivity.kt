@@ -7,6 +7,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.hardware.usb.UsbDevice
@@ -16,8 +17,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -25,7 +29,6 @@ import com.ruangfoto.app.databinding.ActivityMainBinding
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -94,16 +97,16 @@ class MainActivity : AppCompatActivity() {
     private var activeSessionName: String? = null
 
     @Volatile
+    private var previewSeconds = FrameDesignStore.DEFAULT_PREVIEW_SECONDS
+    private val previewHandler = Handler(Looper.getMainLooper())
+    private val hidePreview = Runnable(::clearJpegPreview)
+
+    @Volatile
     private var activeCameraName: String? = null
 
-    private val publishedFiles =
-        ConcurrentHashMap.newKeySet<String>()
+    private val publishedFiles = HashSet<String>()
 
-    private val previousFileSizes =
-        ConcurrentHashMap<String, Long>()
-
-    private val publishingFiles =
-        ConcurrentHashMap.newKeySet<String>()
+    private val seenJpegNames = HashSet<String>()
 
     private val publishLock = Any()
 
@@ -193,6 +196,7 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.receiverLayout.arrangeWorkspace()
 
         val rootView = binding.root
 
@@ -227,6 +231,16 @@ class MainActivity : AppCompatActivity() {
         setupButtons()
         setupSessionScreen()
         updateDashboard()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        binding.receiverLayout.arrangeWorkspace()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        activeSessionDir?.let(::updateSessionFrameControls)
     }
 
     // =====================================
@@ -442,6 +456,7 @@ class MainActivity : AppCompatActivity() {
         activeSessionDir = null
         activeSessionName = null
         activeCameraName = null
+        clearJpegPreview()
 
         binding.receiverLayout.visibility = View.GONE
         binding.sessionSetupLayout.visibility = View.VISIBLE
@@ -462,18 +477,21 @@ class MainActivity : AppCompatActivity() {
 
         synchronized(publishLock) {
             publishedFiles.clear()
-            previousFileSizes.clear()
-            publishingFiles.clear()
+            seenJpegNames.clear()
+            sessionDir.listFiles()?.forEach { photo ->
+                if (photo.isFile && isJpeg(photo)) seenJpegNames.add(photo.name)
+            }
         }
 
         binding.activeSessionText.text = "Session: ${sessionDir.name}"
+        updateSessionFrameControls(sessionDir)
+        clearJpegPreview()
 
         binding.sessionSetupLayout.visibility = View.GONE
         binding.receiverLayout.visibility = View.VISIBLE
 
         updateDashboard()
         updateSessionStats()
-        loadLatestJpegPreview()
 
         updateStatus("Session selected - waiting for camera")
 
@@ -503,7 +521,25 @@ class MainActivity : AppCompatActivity() {
             startActivity(UploadActivity.intent(this, activeSessionDir))
         }
 
+        binding.frameButton.setOnClickListener {
+            activeSessionDir?.let { startActivity(FrameEditorActivity.intent(this, it)) }
+        }
+
+        binding.showLatestButton.setOnClickListener {
+            activeSessionDir?.let(::showLatestJpegPreview)
+        }
+
         binding.stopButton.isEnabled = false
+    }
+
+    private fun updateSessionFrameControls(directory: File) {
+        val store = FrameDesignStore(directory)
+        val enabled = runCatching { store.activeOverlay() != null }.getOrDefault(false)
+        binding.frameStatus.setText(if (enabled) R.string.session_frame_on else R.string.session_frame_off)
+        val previousSeconds = previewSeconds
+        previewSeconds = store.previewDurationSeconds()
+        binding.previewPlaceholderText.setText(if (previewSeconds == 0) R.string.session_preview_off else R.string.session_preview_ready)
+        if (previewSeconds == 0 && previousSeconds != 0) clearJpegPreview()
     }
 
     // Restart receiver using the still-connected USB camera.
@@ -624,7 +660,7 @@ class MainActivity : AppCompatActivity() {
     // IMAGE PREVIEW
     // =====================================
 
-    private fun updateJpegPreview(file: File) {
+    private fun updateJpegPreview(directory: File, file: File, manual: Boolean = false) {
 
         if (activityDestroyed || !isJpeg(file)) return
         if (!file.exists() || file.length() <= 0L) return
@@ -667,7 +703,8 @@ class MainActivity : AppCompatActivity() {
 
             runOnUiThread {
 
-                if (activityDestroyed) {
+                val seconds = if (manual && previewSeconds == 0) FrameDesignStore.DEFAULT_PREVIEW_SECONDS else previewSeconds
+                if (activityDestroyed || activeSessionDir != directory || seconds == 0) {
                     bitmap.recycle()
                     return@runOnUiThread
                 }
@@ -675,21 +712,36 @@ class MainActivity : AppCompatActivity() {
                 binding.previewImage.setImageBitmap(bitmap)
                 binding.previewImage.visibility = View.VISIBLE
                 binding.previewPlaceholderText.visibility = View.GONE
+                previewHandler.removeCallbacks(hidePreview)
+                previewHandler.postDelayed(hidePreview, seconds * 1_000L)
             }
 
         } catch (_: Exception) {
         }
     }
 
-    private fun loadLatestJpegPreview() {
-
-        val latestJpeg = getSessionFiles()
-            .filter { isJpeg(it) }
-            .maxByOrNull { it.lastModified() }
-
-        if (latestJpeg != null) {
-            updateJpegPreview(latestJpeg)
+    private fun showLatestJpegPreview(directory: File) {
+        publishExecutor.execute {
+            val photo = directory.listFiles()?.asSequence()?.filter { it.isFile && isJpeg(it) }
+                ?.maxByOrNull { it.lastModified() }
+            if (photo == null) {
+                runOnUiThread {
+                    if (!activityDestroyed && activeSessionDir == directory) {
+                        Toast.makeText(this, R.string.session_preview_empty, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                return@execute
+            }
+            val framed = SessionFrame(directory).outputFor(photo)
+            updateJpegPreview(directory, if (framed.isFile) framed else photo, manual = true)
         }
+    }
+
+    private fun clearJpegPreview() {
+        previewHandler.removeCallbacks(hidePreview)
+        binding.previewImage.setImageDrawable(null)
+        binding.previewImage.visibility = View.GONE
+        binding.previewPlaceholderText.visibility = View.VISIBLE
     }
 
     private fun calculateInSampleSize(
@@ -1071,16 +1123,16 @@ class MainActivity : AppCompatActivity() {
         binding.statusText.text = "Starting camera receiver..."
 
         updateSessionStats()
-        loadLatestJpegPreview()
 
         publishTask?.cancel(false)
+        val frame = SessionFrame(destination)
 
         publishTask = publishExecutor.scheduleWithFixedDelay(
             {
 
                 try {
 
-                    publishNewFiles(destination)
+                    publishNewFiles(destination, frame)
                     updateSessionStats()
 
                 } catch (_: Exception) {
@@ -1141,14 +1193,12 @@ class MainActivity : AppCompatActivity() {
                 if (usbConnection === connection) {
                     usbConnection = null
                 }
-
-                try {
-                    publishNewFiles(destination)
-                } catch (_: Exception) {
-                }
-
                 publishTask?.cancel(false)
                 publishTask = null
+                try {
+                    publishNewFiles(destination, frame)
+                } catch (_: Exception) {
+                }
 
                 nativeRunning.set(false)
                 UploadService.watching = false
@@ -1228,69 +1278,40 @@ class MainActivity : AppCompatActivity() {
         return isJpeg(file) || isRaw(file)
     }
 
-    private fun publishNewFiles(directory: File) {
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return
-        }
-
+    private fun publishNewFiles(directory: File, frame: SessionFrame) {
         synchronized(publishLock) {
-
-            val files = directory.listFiles()
-                ?.filter { it.isFile && isSupportedPhoto(it) }
-                ?: return
-
-            val sessionName = directory.name
-
-            for (file in files) {
-
-                val key = file.absolutePath
-
-                if (publishedFiles.contains(key)) continue
-                if (!publishingFiles.add(key)) continue
-
-                try {
-
-                    val currentSize = file.length()
-
-                    if (currentSize <= 0L) {
-                        continue
+            if (activeSessionDir != directory) return
+            // The receiver atomically renames complete downloads; temporary .part files are not photos.
+            val originals = directory.listFiles()?.filter { it.isFile && isSupportedPhoto(it) } ?: return
+            val newJpegs = originals.filter { isJpeg(it) && seenJpegNames.add(it.name) }
+            if (!frame.renderNewPhotos(newJpegs)) {
+                runOnUiThread {
+                    if (!activityDestroyed && activeSessionDir == directory) {
+                        Toast.makeText(this, R.string.session_frame_render_failed, Toast.LENGTH_LONG).show()
                     }
-
-                    if (isAlreadyPublished(file, sessionName)) {
-
-                        publishedFiles.add(key)
-                        previousFileSizes.remove(key)
-
-                        continue
-                    }
-
-                    val previousSize = previousFileSizes.put(
-                        key,
-                        currentSize
-                    )
-
-                    if (
-                        previousSize == null ||
-                        previousSize != currentSize
-                    ) {
-                        continue
-                    }
-
-                    if (publishSingleFile(file, sessionName)) {
-
-                        publishedFiles.add(key)
-                        previousFileSizes.remove(key)
-
-                        if (isJpeg(file)) {
-                            updateJpegPreview(file)
-                        }
-                    }
-
-                } finally {
-
-                    publishingFiles.remove(key)
                 }
+            }
+            if (previewSeconds > 0) newJpegs.maxByOrNull { it.lastModified() }?.let { photo ->
+                val framed = frame.outputFor(photo)
+                updateJpegPreview(directory, if (framed.isFile) framed else photo)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val galleryPath = "${Environment.DIRECTORY_PICTURES}/RuangFoto/Sessions/${directory.name}/"
+                publishToGallery(originals, galleryPath)
+                frame.outputDirectory.listFiles()?.let { files ->
+                    publishToGallery(files.filter { it.isFile && isJpeg(it) }, "${galleryPath}${frame.outputDirectory.name}/")
+                }
+            }
+        }
+    }
+
+    private fun publishToGallery(files: Iterable<File>, relativePath: String) {
+        for (file in files) {
+            val key = file.absolutePath
+            if (key in publishedFiles || file.length() <= 0) continue
+            if (isAlreadyPublished(file, relativePath) || publishSingleFile(file, relativePath)) {
+                publishedFiles.add(key)
             }
         }
     }
@@ -1301,7 +1322,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun isAlreadyPublished(
         sourceFile: File,
-        sessionName: String
+        relativePath: String
     ): Boolean {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -1309,9 +1330,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         return try {
-
-            val relativePath =
-                "${Environment.DIRECTORY_PICTURES}/RuangFoto/Sessions/$sessionName/"
 
             val collection =
                 MediaStore.Images.Media.getContentUri(
@@ -1353,7 +1371,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun publishSingleFile(
         sourceFile: File,
-        sessionName: String
+        relativePath: String
     ): Boolean {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -1363,9 +1381,6 @@ class MainActivity : AppCompatActivity() {
         var destinationUri: Uri? = null
 
         try {
-
-            val relativePath =
-                "${Environment.DIRECTORY_PICTURES}/RuangFoto/Sessions/$sessionName/"
 
             val extension =
                 sourceFile.extension.lowercase(Locale.ROOT)
@@ -1471,6 +1486,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
 
         activityDestroyed = true
+        previewHandler.removeCallbacks(hidePreview)
 
         if (nativeRunning.get()) {
 

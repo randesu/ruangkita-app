@@ -21,7 +21,9 @@ internal fun photoKind(name: String): String? = when (name.substringAfterLast('.
     else -> null
 }
 internal fun uploadMatches(name: String, mode: String) = photoKind(name)?.let { mode == "all" || it == mode } ?: false
-internal fun remotePhotoName(id: String, name: String): String = id + "-" + name.takeLast(120).map {
+internal fun remotePhotoName(id: String, name: String): String = id + "-" + remoteSuffix(name)
+internal fun remoteFramedName(id: String, name: String): String = id + "-framed-" + remoteSuffix(name)
+private fun remoteSuffix(name: String): String = name.takeLast(120).map {
     if (it.isLetterOrDigit() && it.code < 128 || it in "._-") it else '_'
 }.joinToString("")
 
@@ -32,16 +34,24 @@ internal data class UploadJob(val id: String, val path: String, val size: Long, 
 internal data class UploadRule(val enabled: Boolean = false, val mode: String = "all")
 
 /** Database handles are process-local; all state transitions are transactional and survive process death. */
-internal class UploadStore(private val context: Context) : SQLiteOpenHelper(context, "uploads.db", null, 2) {
+internal class UploadStore(private val context: Context) : SQLiteOpenHelper(context, "uploads.db", null, 3) {
     private val prefs = context.getSharedPreferences("ftp_settings", Context.MODE_PRIVATE)
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE sessions(path TEXT PRIMARY KEY, enabled INTEGER NOT NULL, mode TEXT NOT NULL)")
         db.execSQL("CREATE TABLE jobs(id TEXT PRIMARY KEY, destination TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, modified INTEGER NOT NULL, name TEXT NOT NULL, state TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, due INTEGER NOT NULL DEFAULT 0, finalizing INTEGER NOT NULL DEFAULT 0, error TEXT NOT NULL DEFAULT '', session_folder TEXT, UNIQUE(destination,path,size,modified))")
     }
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        check(oldVersion == 1 && newVersion == 2) { "Unsupported upload database version" }
+        check(oldVersion in 1..2 && newVersion == 3) { "Unsupported upload database version" }
         // Keep existing jobs at their original path, including ones recovering a remote rename.
-        db.execSQL("ALTER TABLE jobs ADD COLUMN session_folder TEXT")
+        if (oldVersion < 2) db.execSQL("ALTER TABLE jobs ADD COLUMN session_folder TEXT")
+        // Preserve "only new" for sessions enabled before framed photos were eligible.
+        db.rawQuery("SELECT path FROM sessions WHERE enabled=1", null).use { rows ->
+            while (rows.moveToNext()) {
+                val directory = File(rows.getString(0))
+                val sessionFolder = directory.name
+                forEachFramedJpeg(directory) { file -> insertFile(db, file, "skipped", sessionFolder, framed = true) }
+            }
+        }
     }
 
     fun settings(): TransferSettings? {
@@ -111,13 +121,18 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
         db.beginTransaction()
         try {
             val sessionFolder = directory.name
-            // Baseline every existing photo when opting in; changing a filter is not retroactive.
-            for (file in directory.listFiles().orEmpty().filter { it.isFile && photoKind(it.name) != null }) {
-                insertFile(db, file, if (includeExisting && uploadMatches(file.name, mode)) "pending" else "skipped", sessionFolder)
-                if (includeExisting && uploadMatches(file.name, mode)) db.execSQL(
+            fun baseline(file: File, isFramed: Boolean) {
+                val matched = includeExisting && uploadMatches(file.name, mode)
+                insertFile(db, file, if (matched) "pending" else "skipped", sessionFolder, isFramed)
+                if (matched) db.execSQL(
                     "UPDATE jobs SET state='pending',error='',due=0,session_folder=CASE WHEN state='skipped' THEN ? ELSE session_folder END WHERE destination=? AND path=? AND size=? AND modified=? AND state IN ('skipped','cancelled')",
                     arrayOf(sessionFolder, prefs.getString("destination", "")!!, file.absolutePath, file.length(), file.lastModified()))
             }
+            // Baseline every existing photo when opting in; changing a filter is not retroactive.
+            for (file in directory.listFiles().orEmpty()) {
+                if (file.isFile && photoKind(file.name) != null) baseline(file, false)
+            }
+            forEachFramedJpeg(directory) { baseline(it, true) }
             db.insertWithOnConflict("sessions", null, ContentValues().apply {
                 put("path", directory.absolutePath); put("enabled", if (enabled) 1 else 0); put("mode", mode)
             }, SQLiteDatabase.CONFLICT_REPLACE)
@@ -137,11 +152,20 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
                         insertFile(db, file, if (uploadMatches(file.name, mode)) "pending" else "skipped", sessionFolder)
                     }
                 }
+                forEachFramedJpeg(directory) { file ->
+                    insertFile(db, file, if (mode == "raw") "skipped" else "pending", sessionFolder, framed = true)
+                }
             }
         }
     }
 
-    private fun insertFile(db: SQLiteDatabase, file: File, state: String, sessionFolder: String) {
+    private inline fun forEachFramedJpeg(directory: File, action: (File) -> Unit) {
+        for (file in framedPhotoDirectory(directory).listFiles().orEmpty()) {
+            if (file.isFile && file.length() > 0 && photoKind(file.name) == "jpeg") action(file)
+        }
+    }
+
+    private fun insertFile(db: SQLiteDatabase, file: File, state: String, sessionFolder: String, framed: Boolean = false) {
         val destination = prefs.getString("destination", "")!!
         db.rawQuery("SELECT 1 FROM jobs WHERE destination=? AND path=? AND size=? AND modified=? LIMIT 1",
             arrayOf(destination, file.absolutePath, file.length().toString(), file.lastModified().toString())).use {
@@ -152,7 +176,7 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
             put("id", id); put("path", file.absolutePath); put("size", file.length()); put("modified", file.lastModified())
             put("destination", destination)
             put("session_folder", sessionFolder)
-            put("name", remotePhotoName(id, file.name)); put("state", state)
+            put("name", if (framed) remoteFramedName(id, file.name) else remotePhotoName(id, file.name)); put("state", state)
         }, SQLiteDatabase.CONFLICT_IGNORE)
     }
 

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/transfer_background">
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        style="@style/Widget.RuangFoto.Workspace.Toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:subtitleTextColor="@color/transfer_muted"
+        app:title="@string/frame_editor_title" />
+
+    <LinearLayout
+        android:id="@+id/editorWorkspace"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/workspace_gutter"
+        android:paddingTop="@dimen/workspace_gap">
+        <LinearLayout
+            android:id="@+id/editorStage"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <FrameLayout android:id="@+id/previewFrame" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@color/workspace_preview">
+                <ImageView android:id="@+id/previewImage" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitCenter" android:contentDescription="@string/frame_editor_preview_description" />
+                <com.ruangfoto.app.LayerSelectionView android:id="@+id/selectionOverlay" android:layout_width="match_parent" android:layout_height="match_parent" android:importantForAccessibility="no" />
+                <TextView android:id="@+id/previewEmpty" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center" android:padding="24dp" android:text="@string/frame_editor_empty" android:textColor="@color/transfer_muted" android:textSize="14sp" />
+            </FrameLayout>
+
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="horizontal">
+                <com.google.android.material.button.MaterialButton android:id="@+id/undoButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/frame_editor_undo" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/redoButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/frame_editor_redo" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/historyButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1.4" android:text="@string/frame_editor_history_short" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.1" android:fillViewport="true">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:background="@color/transfer_surface">
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/frame_editor_shape" android:textAppearance="@style/TextAppearance.RuangFoto.Section" android:accessibilityHeading="true" />
+            <Spinner android:id="@+id/canvasSpinner" android:layout_width="match_parent" android:layout_height="48dp" android:backgroundTint="@color/transfer_border" android:contentDescription="@string/frame_editor_shape" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/customSizeButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/frame_editor_custom_size" android:visibility="gone" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                <com.google.android.material.button.MaterialButton android:id="@+id/overlayChooseButton" style="@style/Widget.RuangFoto.Workspace.Secondary" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="8dp" android:text="@string/frame_editor_choose_png" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/addLabelButton" style="@style/Widget.RuangFoto.Workspace.Secondary" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/frame_editor_add_label_short" android:contentDescription="@string/frame_editor_add_label" />
+            </LinearLayout>
+            <com.google.android.material.button.MaterialButton android:id="@+id/overlayRemoveButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="wrap_content" android:layout_height="48dp" android:text="@string/frame_editor_remove_png" android:textColor="@color/transfer_stop" />
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="@string/frame_editor_layers" android:textAppearance="@style/TextAppearance.RuangFoto.Section" android:accessibilityHeading="true" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/frame_editor_preview_note" android:textColor="@color/transfer_muted" android:textSize="12sp" />
+            <LinearLayout android:id="@+id/layerList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="vertical" android:visibility="gone" />
+
+            <LinearLayout android:id="@+id/labelPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                <com.google.android.material.textfield.TextInputLayout android:id="@+id/labelTextLayout" style="@style/Widget.RuangFoto.Transfer.Input" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="@string/frame_editor_label_hint">
+                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/labelTextInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textMultiLine" android:maxLength="140" android:maxLines="4" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView android:id="@+id/sizeLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/frame_editor_size" android:textColor="@color/transfer_muted" android:labelFor="@+id/sizeSeek" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                    <SeekBar android:id="@+id/sizeSeek" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:contentDescription="@string/frame_editor_size" />
+                    <TextView android:id="@+id/sizeValue" android:layout_width="56dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/transfer_text" />
+                </LinearLayout>
+
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/frame_editor_horizontal" android:textColor="@color/transfer_muted" android:labelFor="@+id/xSeek" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                    <SeekBar android:id="@+id/xSeek" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:contentDescription="@string/frame_editor_horizontal" />
+                    <TextView android:id="@+id/xValue" android:layout_width="56dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/transfer_text" />
+                </LinearLayout>
+
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/frame_editor_vertical" android:textColor="@color/transfer_muted" android:labelFor="@+id/ySeek" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                    <SeekBar android:id="@+id/ySeek" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:contentDescription="@string/frame_editor_vertical" />
+                    <TextView android:id="@+id/yValue" android:layout_width="56dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/transfer_text" />
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/colorButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/frame_editor_color" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/fontButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/frame_editor_font" />
+                </LinearLayout>
+                <com.google.android.material.button.MaterialButton android:id="@+id/removeLabelButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/frame_editor_remove_label" android:textColor="@color/transfer_stop" />
+            </LinearLayout>
+
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="@string/frame_editor_preview_duration" android:textAppearance="@style/TextAppearance.RuangFoto.Section" android:accessibilityHeading="true" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/frame_editor_preview_duration_hint" android:textColor="@color/transfer_muted" android:textSize="12sp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <SeekBar android:id="@+id/previewDurationSeek" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:max="60" android:progress="15" android:contentDescription="@string/frame_editor_preview_duration" />
+                <TextView android:id="@+id/previewDurationValue" android:layout_width="56dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/transfer_text" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton android:id="@+id/disableButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginBottom="12dp" android:text="@string/frame_editor_disable" android:textColor="@color/transfer_stop" />
+        </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/workspace_gutter" android:layout_marginTop="8dp" android:orientation="horizontal" android:gravity="center_vertical">
+        <com.google.android.material.progressindicator.CircularProgressIndicator android:id="@+id/statusProgress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:indeterminate="true" android:visibility="gone" app:indicatorSize="18dp" app:trackThickness="2dp" app:indicatorColor="@color/transfer_accent" />
+        <TextView android:id="@+id/statusText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/transfer_muted" android:textSize="13sp" android:accessibilityLiveRegion="polite" />
+    </LinearLayout>
+    <com.google.android.material.button.MaterialButton android:id="@+id/saveButton" style="@style/Widget.RuangFoto.Transfer.Button" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginHorizontal="@dimen/workspace_gutter" android:layout_marginVertical="8dp" android:text="@string/frame_editor_save" />
+</LinearLayout>

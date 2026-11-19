@@ -17,17 +17,19 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SonyGphotoTest">
+        android:theme="@style/Theme.RuangFoto.Workspace">
         <activity
             android:name=".UploadActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.RuangFoto.Transfers" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ServerSettingsActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.RuangFoto.Transfers" />
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".FrameEditorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <service
             android:name=".UploadService"
             android:exported="false"
@@ -35,6 +37,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

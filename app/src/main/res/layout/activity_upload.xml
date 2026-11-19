@@ -1,24 +1,33 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/transfer_background">
-    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" app:title="@string/transfers_title" app:titleTextColor="@color/transfer_text" app:navigationIcon="@drawable/ic_transfer_back" app:navigationContentDescription="@string/transfer_back" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingHorizontal="20dp">
-        <LinearLayout android:id="@+id/serverSettingsRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="16dp" android:background="@color/transfer_surface" android:foreground="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" style="@style/Widget.RuangFoto.Workspace.Toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" app:title="@string/transfers_title" />
+    <LinearLayout android:id="@+id/transferWorkspace" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:paddingHorizontal="@dimen/workspace_gutter" android:paddingTop="@dimen/workspace_gap">
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:background="@color/transfer_surface">
+        <LinearLayout android:id="@+id/serverSettingsRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginBottom="12dp" android:orientation="horizontal" android:gravity="center_vertical" android:padding="8dp" android:background="@color/workspace_control" android:foreground="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/transfer_server_settings" android:textColor="@color/transfer_text" android:textSize="16sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/transfer_server_settings" android:textAppearance="@style/TextAppearance.RuangFoto.Section" />
                 <TextView android:id="@+id/serverSummary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/transfer_muted" android:textSize="13sp" />
             </LinearLayout>
-            <TextView android:layout_width="32dp" android:layout_height="48dp" android:gravity="center" android:text="›" android:importantForAccessibility="no" android:textSize="28sp" android:textColor="@color/transfer_accent" />
+            <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:gravity="center" android:text="›" android:importantForAccessibility="no" android:textSize="24sp" android:textColor="@color/transfer_text" />
         </LinearLayout>
-        <TextView android:id="@+id/sessionName" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:textColor="@color/transfer_muted" android:textSize="13sp" />
+        <TextView android:id="@+id/sessionName" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/transfer_muted" android:textSize="13sp" />
         <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/autoUploadCheck" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/transfer_auto_send" android:textColor="@color/transfer_text" app:useMaterialThemeColors="true" />
         <Spinner android:id="@+id/photoFilterSpinner" android:layout_width="match_parent" android:layout_height="48dp" android:backgroundTint="@color/transfer_border" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/transfer_recent_files" android:textColor="@color/transfer_text" android:textSize="18sp" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/transfer_jpeg_includes_frames" android:textColor="@color/transfer_muted" android:textSize="12sp" />
+    </LinearLayout>
+    </ScrollView>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.4" android:orientation="vertical" android:padding="12dp" android:background="@color/transfer_surface">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/transfer_recent_files" android:textAppearance="@style/TextAppearance.RuangFoto.Section" android:accessibilityHeading="true" />
         <TextView android:id="@+id/queueSummary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/transfer_muted" android:textSize="13sp" />
         <TextView android:id="@+id/transferProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/transfer_accent" android:textSize="13sp" android:accessibilityLiveRegion="polite" />
-    </LinearLayout>
-    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginHorizontal="20dp" android:layout_marginTop="12dp">
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="8dp">
         <ListView android:id="@+id/queueList" android:layout_width="match_parent" android:layout_height="match_parent" android:divider="@color/transfer_border" android:dividerHeight="1dp" android:clipToPadding="false" android:paddingBottom="8dp" />
         <TextView android:id="@+id/emptyQueue" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="@string/transfer_empty" android:textColor="@color/transfer_muted" />
-    </FrameLayout>
-    <com.google.android.material.button.MaterialButton android:id="@+id/transferToggleButton" style="@style/Widget.RuangFoto.Transfer.Button" android:layout_width="match_parent" android:layout_height="56dp" android:layout_margin="20dp" android:layout_marginBottom="0dp" android:text="@string/transfer_pause" />
-    <com.google.android.material.button.MaterialButton android:id="@+id/stopUploadsButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginHorizontal="20dp" android:layout_marginBottom="12dp" android:text="@string/transfer_stop" android:textColor="@color/transfer_stop" />
+        </FrameLayout>
+    </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingHorizontal="@dimen/workspace_gutter" android:paddingVertical="8dp">
+        <com.google.android.material.button.MaterialButton android:id="@+id/transferToggleButton" style="@style/Widget.RuangFoto.Transfer.Button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="8dp" android:text="@string/transfer_pause" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/stopUploadsButton" style="@style/Widget.RuangFoto.Workspace.Secondary" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/transfer_stop" android:textColor="@color/transfer_stop" />
+    </LinearLayout>
 </LinearLayout>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="frame_editor_title">Frame editor</string>
+    <string name="frame_editor_preview_description">Live frame preview</string>
+    <string name="frame_editor_preview_note">Drag a layer on the preview to move it. Opaque areas cover the photo.</string>
+    <string name="frame_editor_empty">No frame yet.\nChoose a PNG or add text below.</string>
+
+    <string name="frame_editor_status_loading">Loading frame\u2026</string>
+    <string name="frame_editor_status_saving">Saving frame\u2026</string>
+    <string name="frame_editor_status_working">Working\u2026</string>
+    <string name="frame_editor_status_importing_frame">Importing frame image\u2026</string>
+    <string name="frame_editor_status_importing_font">Importing font\u2026</string>
+    <string name="frame_editor_status_loading_revision">Loading saved version\u2026</string>
+    <string name="frame_editor_status_enabled">Frame on for this session</string>
+    <string name="frame_editor_status_disabled">Frame off for this session</string>
+    <string name="frame_editor_status_unsaved">Unsaved changes</string>
+    <string name="frame_editor_revision_loaded">Showing a saved version. Apply it to use it.</string>
+
+    <string name="frame_editor_frame_image">Frame image</string>
+    <string name="frame_editor_choose_png">Choose PNG</string>
+    <string name="frame_editor_replace_png">Replace PNG</string>
+    <string name="frame_editor_remove_png">Remove image</string>
+    <string name="frame_editor_undo">Undo</string>
+    <string name="frame_editor_redo">Redo</string>
+
+    <string name="frame_editor_shape">Frame shape</string>
+    <string name="frame_editor_custom_size">Frame size: %1$s</string>
+    <string name="frame_editor_custom_size_value">%1$d × %2$d px</string>
+    <string name="frame_editor_custom_size_title">Canvas size</string>
+    <string name="frame_editor_history_short">History</string>
+    <string name="frame_editor_add_label_short">Add text</string>
+    <string name="frame_editor_custom_size_hint">Output: %1$d × %2$d px</string>
+    <string name="frame_editor_custom_size_invalid">Use 64 to 2400 pixels per side, up to 6 megapixels.</string>
+    <string name="frame_editor_size_mode_ratio">Aspect ratio</string>
+    <string name="frame_editor_size_mode_dimensions">Width and height</string>
+    <string name="frame_editor_size_unit">Canvas size unit</string>
+    <string name="frame_editor_print_dpi">Print DPI</string>
+    <string name="frame_editor_print_dpi_invalid">Enter a DPI from 1 to %1$d.</string>
+    <string name="frame_editor_print_size_value">%1$s × %2$s %3$s · %4$d DPI</string>
+    <string name="frame_editor_ratio_width">Width</string>
+    <string name="frame_editor_ratio_height">Height</string>
+    <string name="frame_editor_ratio_separator">×</string>
+
+    <string name="frame_editor_layers">Layers</string>
+    <string name="frame_editor_layers_hint">Top of the list draws on top. Tap a layer to edit it, use the arrows to reorder, or drag it on the preview.</string>
+    <string name="frame_editor_layer_image">Frame image</string>
+    <string name="frame_editor_image_size">Image size</string>
+    <string name="frame_editor_remove_image">Remove image</string>
+    <string name="frame_editor_move_up">Up</string>
+    <string name="frame_editor_move_down">Down</string>
+    <string name="frame_editor_move_up_named">Move %1$s up</string>
+    <string name="frame_editor_move_down_named">Move %1$s down</string>
+    <string name="frame_editor_hide">Hide</string>
+    <string name="frame_editor_show">Show</string>
+    <string name="frame_editor_hide_named">Hide %1$s</string>
+    <string name="frame_editor_show_named">Show %1$s</string>
+    <string name="frame_editor_layer_state_selected">%1$s, selected</string>
+    <string name="frame_editor_layer_state_hidden">%1$s, hidden</string>
+    <string name="frame_editor_layer_state_hidden_selected">%1$s, hidden, selected</string>
+
+    <string name="frame_editor_add_label">Add text or emoji</string>
+    <string name="frame_editor_layer">Layer %1$d</string>
+    <string name="frame_editor_new_label">Text</string>
+    <string name="frame_editor_label_hint">Text or emoji</string>
+    <string name="frame_editor_size">Size</string>
+    <string name="frame_editor_horizontal">Horizontal position</string>
+    <string name="frame_editor_vertical">Vertical position</string>
+    <string name="frame_editor_percent">%1$d%%</string>
+    <string name="frame_editor_color">Color</string>
+    <string name="frame_editor_color_value">Color: %1$s</string>
+    <string name="frame_editor_color_white">White</string>
+    <string name="frame_editor_color_black">Black</string>
+    <string name="frame_editor_color_gold">Gold</string>
+    <string name="frame_editor_color_red">Red</string>
+    <string name="frame_editor_color_teal">Teal</string>
+    <string name="frame_editor_custom">Custom</string>
+    <string name="frame_editor_system">System</string>
+    <string name="frame_editor_font">Font</string>
+    <string name="frame_editor_font_value">Font: %1$s</string>
+    <string name="frame_editor_font_dialog_title">Layer font</string>
+    <string name="frame_editor_font_system">System font</string>
+    <string name="frame_editor_font_pick">Pick TTF or OTF file</string>
+    <string name="frame_editor_remove_label">Remove layer</string>
+
+    <string name="frame_editor_history">Frame history</string>
+    <string name="frame_editor_history_empty">No saved versions yet. Save the frame to create one.</string>
+    <string name="frame_editor_revision_row">%1$s\n%2$s</string>
+    <string name="frame_editor_apply_revision">Apply this version</string>
+
+    <string name="frame_editor_preview_duration">Shot preview</string>
+    <string name="frame_editor_preview_duration_hint">Seconds the last shot stays on screen. 0 turns the preview off.</string>
+    <string name="frame_editor_preview_seconds">%1$d s</string>
+    <string name="frame_editor_preview_off">Off</string>
+
+    <string name="frame_editor_save">Save frame</string>
+    <string name="frame_editor_disable">Turn off frame</string>
+    <string name="frame_editor_saved">Frame saved for this session</string>
+    <string name="frame_editor_applied">Version applied to this session</string>
+    <string name="frame_editor_turned_off">Frame turned off for this session</string>
+
+    <string name="frame_editor_load_failed">Could not load the frame for this session</string>
+    <string name="frame_editor_save_failed">Could not save the frame</string>
+    <string name="frame_editor_disable_failed">Could not turn off the frame</string>
+    <string name="frame_editor_import_failed">Could not import that image</string>
+    <string name="frame_editor_font_failed">Could not use that font file</string>
+    <string name="frame_editor_history_failed">Could not load saved versions</string>
+    <string name="frame_editor_revision_failed">Could not load that version</string>
+    <string name="frame_editor_duration_failed">Could not save the shot preview duration</string>
+
+    <string name="frame_editor_discard_title">Discard changes?</string>
+    <string name="frame_editor_discard_message">Your frame changes have not been saved.</string>
+    <string name="frame_editor_discard">Discard</string>
+    <string name="frame_editor_keep_editing">Keep editing</string>
+    <string name="frame_editor_disable_title">Turn off the frame?</string>
+    <string name="frame_editor_disable_message">New photos will not get a frame. Saved versions and existing photos are kept.</string>
+</resources>

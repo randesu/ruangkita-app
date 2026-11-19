@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingHorizontal="24dp" android:paddingVertical="8dp">
+
+    <RadioGroup android:id="@+id/sizeModeGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+
+        <RadioButton android:id="@+id/ratioMode" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/frame_editor_size_mode_ratio" android:checked="true" />
+
+        <LinearLayout android:id="@+id/ratioRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+
+            <EditText android:id="@+id/ratioWidth" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:hint="@string/frame_editor_ratio_width" android:inputType="number" android:maxLength="3" android:importantForAutofill="no" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="12dp" android:text="@string/frame_editor_ratio_separator" android:textColor="@color/transfer_text" />
+
+            <EditText android:id="@+id/ratioHeight" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:hint="@string/frame_editor_ratio_height" android:inputType="number" android:maxLength="3" android:importantForAutofill="no" />
+        </LinearLayout>
+
+        <RadioButton android:id="@+id/dimensionsMode" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:text="@string/frame_editor_size_mode_dimensions" />
+
+        <LinearLayout android:id="@+id/dimensionsFields" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+            <Spinner android:id="@+id/sizeUnit" android:layout_width="match_parent" android:layout_height="48dp" android:contentDescription="@string/frame_editor_size_unit" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+
+                <EditText android:id="@+id/sizeWidth" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:gravity="center" android:hint="@string/frame_editor_ratio_width" android:inputType="numberDecimal" android:maxLength="12" android:importantForAutofill="no" />
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="12dp" android:text="@string/frame_editor_ratio_separator" android:textColor="@color/transfer_text" />
+
+                <EditText android:id="@+id/sizeHeight" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:gravity="center" android:hint="@string/frame_editor_ratio_height" android:inputType="numberDecimal" android:maxLength="12" android:importantForAutofill="no" />
+            </LinearLayout>
+            <EditText android:id="@+id/printDpi" android:layout_width="match_parent" android:layout_height="48dp" android:hint="@string/frame_editor_print_dpi" android:inputType="number" android:maxLength="4" android:importantForAutofill="no" />
+        </LinearLayout>
+    </RadioGroup>
+
+    <TextView android:id="@+id/sizeHint" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="@color/transfer_muted" android:textSize="12sp" />
+</LinearLayout>
+</ScrollView>

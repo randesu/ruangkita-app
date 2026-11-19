@@ -6,11 +6,16 @@
     <color name="transfer_text">#F2F4EC</color>
     <color name="transfer_muted">#9BA69B</color>
     <color name="transfer_stop">#DE998D</color>
+    <color name="workspace_control">#29372B</color>
+    <color name="workspace_preview">#1A211C</color>
+    <dimen name="workspace_gap">12dp</dimen>
+    <dimen name="workspace_gutter">16dp</dimen>
 
-    <style name="Theme.RuangFoto.Transfers" parent="Theme.SonyGphotoTest">
+    <style name="Theme.RuangFoto.Workspace" parent="Theme.MaterialComponents.NoActionBar">
         <item name="colorPrimary">@color/transfer_accent</item>
         <item name="colorPrimaryVariant">@color/transfer_surface</item>
         <item name="colorSecondary">@color/transfer_accent</item>
+        <item name="colorOnSecondary">@color/transfer_background</item>
         <item name="colorOnPrimary">@color/transfer_background</item>
         <item name="colorOnSurface">@color/transfer_text</item>
         <item name="colorSurface">@color/transfer_surface</item>
@@ -23,6 +28,28 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
     </style>
+
+    <style name="Widget.RuangFoto.Workspace.Toolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/transfer_surface</item>
+        <item name="titleTextColor">@color/transfer_text</item>
+        <item name="navigationIconTint">@color/transfer_text</item>
+        <item name="navigationIcon">@drawable/ic_transfer_back</item>
+        <item name="navigationContentDescription">@string/transfer_back</item>
+    </style>
+    <style name="Widget.RuangFoto.Workspace.Secondary" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/workspace_control</item>
+        <item name="android:textColor">@color/transfer_text</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+    <style name="TextAppearance.RuangFoto.Section" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">@color/transfer_text</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <string name="transfer_connection">Connection</string>
+    <string name="transfer_destination">Destination and retry</string>
 
     <style name="Widget.RuangFoto.Transfer.Button" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/transfer_accent</item>
@@ -50,6 +77,7 @@
     <string name="transfer_back">Back</string>
     <string name="transfer_no_server">Choose a server to start uploading</string>
     <string name="transfer_auto_send">Auto-upload new photos</string>
+    <string name="transfer_jpeg_includes_frames">JPEG uploads include original and framed copies.</string>
     <string name="transfer_recent_files">Recent uploads</string>
     <string name="transfer_empty">No uploads yet</string>
     <string name="transfer_pause">Pause uploads</string>
