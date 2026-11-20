@@ -454,6 +454,11 @@ class FrameEditorActivity : AppCompatActivity() {
         binding.xSeek.isEnabled = !busy && hasLayer
         binding.ySeek.isEnabled = !busy && hasLayer
         binding.alignmentPanel.isEnabled = !busy && hasLayer && selectedIsImage()
+        listOf(
+            binding.alignTopLeftButton, binding.alignTopButton, binding.alignTopRightButton,
+            binding.alignLeftButton, binding.alignCenterButton, binding.alignRightButton,
+            binding.alignBottomLeftButton, binding.alignBottomButton, binding.alignBottomRightButton
+        ).forEach { it.isEnabled = !busy && hasLayer && selectedIsImage() }
         binding.previewDurationSeek.isEnabled = !busy
         binding.overlayChooseButton.setText(
             if (draft.overlay != null) R.string.frame_editor_replace_png else R.string.frame_editor_choose_png)
