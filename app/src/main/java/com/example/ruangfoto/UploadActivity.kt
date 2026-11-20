@@ -29,7 +29,7 @@ class UploadActivity : AppCompatActivity() {
     private var displayed = emptyList<String>()
     private var loadingRule = false
     private var messageExpiresAt = 0L
-    private val modes = listOf("all", "jpeg", "raw")
+    private val modes = listOf("all", "jpeg", "raw", "framed")
 
     private val refresh = object : Runnable {
         override fun run() {
@@ -69,7 +69,7 @@ class UploadActivity : AppCompatActivity() {
         rows = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf<String>())
         binding.queueList.adapter = rows
         binding.queueList.emptyView = binding.emptyQueue
-        binding.photoFilterSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("JPEG + RAW", "JPEG only", "RAW only"))
+        binding.photoFilterSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("JPEG + RAW", "JPEG only", "RAW only", "Framed only"))
         binding.autoUploadCheck.setOnCheckedChangeListener { _, _ -> if (!loadingRule) saveSession(false) }
         binding.photoFilterSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
