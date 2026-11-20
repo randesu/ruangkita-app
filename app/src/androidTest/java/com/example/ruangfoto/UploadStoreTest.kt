@@ -137,6 +137,57 @@ class UploadStoreTest {
             root.deleteRecursively()
         }
     }
+
+    @Test fun framedOnlyQueuesOnlyRenderedJpegs() {
+        val prefix = "framed-only-${UUID.randomUUID()}-"
+        val base = InstrumentationRegistry.getInstrumentation().targetContext
+        val context = IsolatedContext(base, prefix)
+        val root = File(base.cacheDir, prefix).apply { mkdirs() }
+        var store = UploadStore(context)
+        try {
+            store.saveSettings(TransferSettings("framed.example", 21, "user", "secret", "/photos", TransferProtocol.FTP))
+            val session = File(root, "wedding").apply { mkdirs() }
+            File(session, "original.JPG").writeBytes(byteArrayOf(1))
+            File(session, "original.ARW").writeBytes(byteArrayOf(2))
+            val framed = File(session, "Framed").apply { mkdirs() }
+            File(framed, "original.JPG").writeBytes(byteArrayOf(3))
+
+            store.configureSession(session, true, "framed", true)
+            store.scan()
+            var pending = store.jobs().filter { it.state == "pending" }
+            assertEquals(1, pending.size)
+            assertEquals(File(framed, "original.JPG").absolutePath, pending.single().path)
+            assertTrue(pending.single().name.endsWith("-framed-original.JPG"))
+
+            File(session, "later.JPG").writeBytes(byteArrayOf(4))
+            File(session, "later.ARW").writeBytes(byteArrayOf(5))
+            File(framed, "later.JPG").writeBytes(byteArrayOf(6))
+            store.scan()
+            pending = store.jobs().filter { it.state == "pending" }
+            assertEquals(2, pending.size)
+            assertTrue(pending.all { it.path.startsWith(framed.absolutePath) })
+            assertTrue(store.jobs().filter { it.path.startsWith(session.absolutePath) && !it.path.startsWith(framed.absolutePath) }
+                .all { it.state == "skipped" })
+
+            val onlyNew = File(root, "only-new").apply { mkdirs() }
+            val onlyNewFramed = File(onlyNew, "Framed").apply { mkdirs() }
+            File(onlyNew, "old.JPG").writeBytes(byteArrayOf(7))
+            File(onlyNewFramed, "old.JPG").writeBytes(byteArrayOf(8))
+            store.configureSession(onlyNew, true, "framed", false)
+            store.scan()
+            assertEquals("skipped", store.jobs().single { it.path == File(onlyNewFramed, "old.JPG").absolutePath }.state)
+            File(onlyNewFramed, "new.JPG").writeBytes(byteArrayOf(9))
+            store.scan()
+            assertEquals("pending", store.jobs().single { it.path == File(onlyNewFramed, "new.JPG").absolutePath }.state)
+            assertEquals("skipped", store.jobs().single { it.path == File(onlyNew, "old.JPG").absolutePath }.state)
+        } finally {
+            store.close()
+            base.deleteDatabase(prefix + "uploads.db")
+            base.getSharedPreferences(prefix + "ftp_settings", Context.MODE_PRIVATE).edit().clear().commit()
+            root.deleteRecursively()
+        }
+    }
+
 }
 
 private class IsolatedContext(base: Context, private val prefix: String) : ContextWrapper(base) {
