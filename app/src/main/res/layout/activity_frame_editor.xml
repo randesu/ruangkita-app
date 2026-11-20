@@ -64,6 +64,36 @@
                     <TextView android:id="@+id/sizeValue" android:layout_width="56dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/transfer_text" />
                 </LinearLayout>
 
+                <LinearLayout
+                    android:id="@+id/alignmentPanel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/frame_editor_alignment"
+                        android:textColor="@color/transfer_muted" />
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="3"
+                        android:rowCount="3"
+                        android:useDefaultMargins="true">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignTopLeftButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_top_left" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignTopButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_top" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignTopRightButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_top_right" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignLeftButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_left" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignCenterButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_center" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignRightButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_right" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignBottomLeftButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_bottom_left" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignBottomButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_bottom" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/alignBottomRightButton" style="@style/Widget.RuangFoto.Transfer.TextButton" android:layout_width="0dp" android:layout_height="40dp" android:layout_columnWeight="1" android:text="@string/frame_editor_align_bottom_right" />
+                    </GridLayout>
+                </LinearLayout>
+
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/frame_editor_horizontal" android:textColor="@color/transfer_muted" android:labelFor="@+id/xSeek" />
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                     <SeekBar android:id="@+id/xSeek" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:contentDescription="@string/frame_editor_horizontal" />
