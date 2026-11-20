@@ -209,6 +209,20 @@ class FrameEditorActivity : AppCompatActivity() {
         }
         binding.disableButton.setOnClickListener { confirmDisable() }
 
+        listOf(
+            binding.alignTopLeftButton to (0f to 0f),
+            binding.alignTopButton to (0.5f to 0f),
+            binding.alignTopRightButton to (1f to 0f),
+            binding.alignLeftButton to (0f to 0.5f),
+            binding.alignCenterButton to (0.5f to 0.5f),
+            binding.alignRightButton to (1f to 0.5f),
+            binding.alignBottomLeftButton to (0f to 1f),
+            binding.alignBottomButton to (0.5f to 1f),
+            binding.alignBottomRightButton to (1f to 1f)
+        ).forEach { (button, position) ->
+            button.setOnClickListener { alignImage(position.first, position.second) }
+        }
+
         binding.labelTextInput.addTextChangedListener(labelTextWatcher)
         binding.labelTextInput.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) textEditRecorded = false
@@ -357,6 +371,8 @@ class FrameEditorActivity : AppCompatActivity() {
         binding.labelTextLayout.visibility = if (label == null) View.GONE else View.VISIBLE
         binding.colorButton.visibility = if (label == null) View.GONE else View.VISIBLE
         binding.fontButton.visibility = if (label == null) View.GONE else View.VISIBLE
+        binding.alignmentPanel.visibility =
+            if (hasLayer && label == null && draft.overlay != null) View.VISIBLE else View.GONE
         binding.sizeLabel.setText(if (label == null) R.string.frame_editor_image_size else R.string.frame_editor_size)
         binding.removeLabelButton.setText(
             if (label == null) R.string.frame_editor_remove_image else R.string.frame_editor_remove_label)
@@ -437,6 +453,7 @@ class FrameEditorActivity : AppCompatActivity() {
         binding.sizeSeek.isEnabled = !busy && hasLayer
         binding.xSeek.isEnabled = !busy && hasLayer
         binding.ySeek.isEnabled = !busy && hasLayer
+        binding.alignmentPanel.isEnabled = !busy && hasLayer && selectedIsImage()
         binding.previewDurationSeek.isEnabled = !busy
         binding.overlayChooseButton.setText(
             if (draft.overlay != null) R.string.frame_editor_replace_png else R.string.frame_editor_choose_png)
@@ -539,6 +556,15 @@ class FrameEditorActivity : AppCompatActivity() {
         refreshLayerName(draft.zForLabel(index), index)
         requestPreview()
         updateButtons()
+    }
+
+    private fun alignImage(x: Float, y: Float) {
+        if (busy || !selectedIsImage()) return
+        if (draft.imageLayer.x == x && draft.imageLayer.y == y) return
+        recordEdit()
+        updateImageLayer { it.copy(x = x, y = y) }
+        bindSelection()
+        updateStatus()
     }
 
     private fun updateImageLayer(change: (FramePlacement) -> FramePlacement) {
