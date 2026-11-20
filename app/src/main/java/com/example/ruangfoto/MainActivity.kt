@@ -51,6 +51,9 @@ class MainActivity : AppCompatActivity() {
 
     private val nativeExecutor = Executors.newSingleThreadExecutor()
 
+    // Keep remote directory creation off the UI and camera threads.
+    private val sessionFolderExecutor = Executors.newSingleThreadExecutor()
+
     private val publishExecutor: ScheduledExecutorService =
         Executors.newSingleThreadScheduledExecutor()
 
@@ -335,11 +338,39 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 dialog.dismiss()
+                createRemoteSessionFolder(newSessionDir.name)
                 openSession(newSessionDir)
             }
         }
 
         dialog.show()
+    }
+
+    private fun createRemoteSessionFolder(sessionName: String) {
+        sessionFolderExecutor.execute {
+            val settings = runCatching { UploadStore.get(this).settings() }.getOrNull()
+            if (settings == null || (settings.protocol != TransferProtocol.FTP && settings.protocol != TransferProtocol.FTPS)) {
+                return@execute
+            }
+            val result = runCatching { FtpTransfer().createSessionFolder(settings, sessionName) }
+            result.onSuccess {
+                runOnUiThread {
+                    if (!activityDestroyed) {
+                        Toast.makeText(this, "FTP session folder ready: $sessionName", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }.onFailure { error ->
+                runOnUiThread {
+                    if (!activityDestroyed) {
+                        Toast.makeText(
+                            this,
+                            "FTP folder not created: ${error.message ?: "connection failed"}. It will be retried when uploading.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
     }
 
     private fun refreshSessionList() {
@@ -1509,6 +1540,7 @@ class MainActivity : AppCompatActivity() {
         publishTask?.cancel(false)
         publishExecutor.shutdownNow()
         nativeExecutor.shutdown()
+        sessionFolderExecutor.shutdownNow()
 
         super.onDestroy()
     }
