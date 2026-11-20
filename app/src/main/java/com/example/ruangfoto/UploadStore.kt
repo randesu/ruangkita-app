@@ -115,14 +115,14 @@ internal class UploadStore(private val context: Context) : SQLiteOpenHelper(cont
     }
 
     @Synchronized fun configureSession(directory: File, enabled: Boolean, mode: String, includeExisting: Boolean) {
-        require(mode in setOf("all", "raw", "jpeg"))
+        require(mode in setOf("all", "raw", "jpeg", "framed"))
         if (enabled) require(settings() != null) { "Configure the FTP server first" }
         val db = writableDatabase
         db.beginTransaction()
         try {
             val sessionFolder = directory.name
             fun baseline(file: File, isFramed: Boolean) {
-                val matched = includeExisting && uploadMatches(file.name, mode)
+                val matched = includeExisting && if (isFramed) mode != "raw" else uploadMatches(file.name, mode)
                 insertFile(db, file, if (matched) "pending" else "skipped", sessionFolder, isFramed)
                 if (matched) db.execSQL(
                     "UPDATE jobs SET state='pending',error='',due=0,session_folder=CASE WHEN state='skipped' THEN ? ELSE session_folder END WHERE destination=? AND path=? AND size=? AND modified=? AND state IN ('skipped','cancelled')",
