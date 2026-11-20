@@ -127,6 +127,20 @@ internal class FtpTransfer(private val sessionFolder: String? = null) : Transfer
         if (!ftp.changeWorkingDirectory(folder)) fail(ftp, error)
     }
 
+    /** Create the remote session directory before any photos arrive. */
+    fun createSessionFolder(settings: TransferSettings, folder: String) {
+        require(folder.isNotBlank() && folder !in setOf(".", "..") &&
+                folder.none { it == '/' || it == '\\' || it.isISOControl() }) {
+            "Session name cannot be used as an FTP folder"
+        }
+        try {
+            val ftp = connect(settings)
+            enterSessionFolder(ftp, folder)
+        } finally {
+            close()
+        }
+    }
+
     override fun listDirectories(settings: TransferSettings, folder: String): List<String> {
         val ftp = connect(settings.copy(folder = folder))
         return try {
